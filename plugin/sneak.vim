@@ -106,6 +106,7 @@ func! sneak#to(op, input, inputlen, count, repeatmotion, reverse, inclusive, str
   let skip = (is_op || a:repeatmotion || a:inputlen < 2) ? min([999, a:count]) : 0
 
   let l:gt_lt = a:reverse ? '<' : '>'
+  let l:reverse_gt_lt = a:reverse ? '>' : '<'
   let bounds = a:repeatmotion ? s:st.bounds : [0,0] " [left_bound, right_bound]
   let l:scope_pattern = '' " pattern used to highlight the vertical 'scope'
   let l:match_bounds  = ''
@@ -126,6 +127,7 @@ func! sneak#to(op, input, inputlen, count, repeatmotion, reverse, inclusive, str
     let l:leftbound = max([0, (bounds[0] - a:inputlen) + 1])
     let l:match_bounds   = '\%>'.l:leftbound.'v\%<'.bounds[1].'v'
     let s.match_pattern .= l:match_bounds
+    let s.reverse_match_pattern .= l:match_bounds
   endif
 
   "TODO: refactor vertical scope calculation into search.vim,
@@ -177,6 +179,7 @@ func! sneak#to(op, input, inputlen, count, repeatmotion, reverse, inclusive, str
   if (!is_op || a:op ==# 'y') "position _after_ search
     let curlin = string(line('.'))
     let curcol = string(virtcol('.') + (a:reverse ? -1 : 1))
+    let reverse_curcol = string(virtcol('.') + (a:reverse ? 1 : -1))
   endif
 
   "Might as well scope to window height (+/- 99).
@@ -185,7 +188,9 @@ func! sneak#to(op, input, inputlen, count, repeatmotion, reverse, inclusive, str
   let l:restrict_top_bot = '\%'.l:gt_lt.curlin.'l\%>'.l:top.'l\%<'.l:bot.'l'
   let l:scope_pattern .= l:restrict_top_bot
   let s.match_pattern .= l:restrict_top_bot
+  let s.reverse_match_pattern .= '\%'.l:reverse_gt_lt.curlin.'l\%>'.l:top.'l\%<'.l:bot.'l'
   let curln_pattern  = l:match_bounds.'\%'.curlin.'l\%'.l:gt_lt.curcol.'v'
+  let reverse_curln_pattern  = l:match_bounds.'\%'.curlin.'l\%'.l:reverse_gt_lt.reverse_curcol.'v'
 
   "highlight the vertical 'tunnel' that the search is scoped-to
   if max(bounds) "perform the scoped highlight...
@@ -198,6 +203,9 @@ func! sneak#to(op, input, inputlen, count, repeatmotion, reverse, inclusive, str
   "  - store in w: because matchadd() highlight is per-window.
   let w:sneak_hl_id = matchadd('SneakPluginTarget',
         \ (s.prefix).(s.match_pattern).(s.search).'\|'.curln_pattern.(s.search))
+
+  let w:sneak_rev_hl_id = matchadd('SneakPluginTargetRev',
+        \ (s.prefix).(s.reverse_match_pattern).(s.search).'\|'.reverse_curln_pattern.(s.search))
 
   "Let user deactivate with <esc>
   if (has('nvim') || has('gui_running')) && maparg('<esc>', 'n') ==# ""

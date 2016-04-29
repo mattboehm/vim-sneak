@@ -1,6 +1,7 @@
 
 func! sneak#hl#removehl() "remove highlighting
   silent! call matchdelete(w:sneak_hl_id)
+  silent! call matchdelete(w:sneak_rev_hl_id)
   silent! call matchdelete(w:sneak_sc_hl)
 endf
 
@@ -21,9 +22,14 @@ endf
 
 func! s:init()
   let magenta = (&t_Co < 256 ? "magenta" : "201")
+  let magenta2 = (&t_Co < 256 ? "DarkMagenta" : "90")
 
   if 0 == hlID("SneakPluginTarget") || "" == sneak#hl#get("SneakPluginTarget")
     exec "highlight SneakPluginTarget guifg=white guibg=magenta ctermfg=white ctermbg=".magenta
+  endif
+
+  if 0 == hlID("SneakPluginTargetRev") || "" == sneak#hl#get("SneakPluginTargetRev")
+    exec "highlight SneakPluginTargetRev guifg=white guibg=DarkMagenta ctermfg=white ctermbg=".magenta2
   endif
 
   if 0 == hlID("SneakStreakMask") || "" == sneak#hl#get("SneakStreakMask")

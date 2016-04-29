@@ -12,6 +12,7 @@ func! sneak#search#new()
     " example: highlight string 'ab' after line 42, column 5 
     "          matchadd('foo', 'ab\%>42l\%5c', 1)
     let self.match_pattern = ''
+    let self.reverse_match_pattern = ''
     " do not wrap                     search backwards
     let self._search_options = 'W' . (a:reverse ? 'b' : '')
     let self.search_options_no_s = self._search_options
